@@ -3,6 +3,9 @@
 #include <streamsession.h>
 #include <settings.h>
 #include <controllermanager.h>
+#ifdef Q_OS_MACOS
+#include "kbmaim.h"
+#endif
 
 #include <chiaki/base64.h>
 #include <chiaki/streamconnection.h>
@@ -515,6 +518,18 @@ StreamSession::StreamSession(const StreamSessionConnectInfo &connect_info, QObje
 	chiaki_controller_state_set_idle(&keyboard_state);
 	chiaki_controller_state_set_idle(&touch_state);
 	touch_tracker=QMap<int, uint8_t>();
+#ifdef Q_OS_MACOS
+	// KBM edition: mouse -> right stick, keys -> buttons. Toggle with ` or F8.
+	kbm_aim = new KbmAim();
+	kbm_aim->SetChangedCallback([this]{ if(kbm_aim && kbm_aim->Tick()) SendFeedbackState(); });
+	kbm_timer = new QTimer(this);
+	kbm_timer->setTimerType(Qt::PreciseTimer);
+	kbm_timer->setInterval(4);
+	connect(kbm_timer, &QTimer::timeout, this, [this]{ if(kbm_aim && kbm_aim->Tick()) SendFeedbackState(); });
+	kbm_timer->start();
+	connect(this, &StreamSession::ConnectedChanged, this, [this]{ if(kbm_aim && connected) kbm_aim->SetEnabled(true); });
+	connect(this, &StreamSession::LoginPINRequested, this, [this]{ if(kbm_aim) kbm_aim->SetEnabled(false); });
+#endif
 	mouse_touch_id=-1;
 	dpad_touch_id =-1;
 	chiaki_controller_state_set_idle(&dpad_touch_state);
@@ -713,6 +728,12 @@ StreamSession::StreamSession(const StreamSessionConnectInfo &connect_info, QObje
 
 StreamSession::~StreamSession()
 {
+#ifdef Q_OS_MACOS
+	if(kbm_timer)
+		kbm_timer->stop();
+	delete kbm_aim;
+	kbm_aim = nullptr;
+#endif
 	mic_active.storeRelaxed(false);
 	StopAudioOutDrainThread();
 	if(audio_out)
@@ -1285,6 +1306,13 @@ void StreamSession::DpadSendFeedbackState()
 #endif
 	chiaki_controller_state_or(&state, &state, &keyboard_state);
 	chiaki_controller_state_or(&state, &state, &touch_state);
+#ifdef Q_OS_MACOS
+	if(kbm_aim)
+	{
+		ChiakiControllerState kbm_state = kbm_aim->State();
+		chiaki_controller_state_or(&state, &state, &kbm_state);
+	}
+#endif
 
 	if(input_block)
 	{
@@ -1341,6 +1369,13 @@ void StreamSession::SendFeedbackState()
 #endif
 	chiaki_controller_state_or(&state, &state, &keyboard_state);
 	chiaki_controller_state_or(&state, &state, &touch_state);
+#ifdef Q_OS_MACOS
+	if(kbm_aim)
+	{
+		ChiakiControllerState kbm_state = kbm_aim->State();
+		chiaki_controller_state_or(&state, &state, &kbm_state);
+	}
+#endif
 
 	if(input_block)
 	{

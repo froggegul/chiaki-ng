@@ -147,6 +147,8 @@ struct MicBuf
 	uint32_t current_byte;
 };
 
+class KbmAim;
+
 class StreamSession : public QObject
 {
 	friend class StreamSessionPrivate;
@@ -221,6 +223,10 @@ class StreamSession : public QObject
 		float PS_TOUCHPAD_MAX_X, PS_TOUCHPAD_MAX_Y;
 		ChiakiControllerState keyboard_state;
 		ChiakiControllerState touch_state;
+#ifdef Q_OS_MACOS
+		KbmAim *kbm_aim = nullptr;
+		QTimer *kbm_timer = nullptr;
+#endif
 		QMap<int, uint8_t> touch_tracker;
 		int8_t mouse_touch_id;
 		ChiakiControllerState dpad_touch_state;
