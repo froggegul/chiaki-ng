@@ -63,16 +63,23 @@ const int KEY_CAPS = 57;
 const int KEY_SENS_DOWN = 27, KEY_SENS_UP = 24;      // - =
 const int KEY_ADZ_DOWN = 33, KEY_ADZ_UP = 30;        // [ ]
 
+// Layout version 2: PC-style keys for the GTA 6 *Default* control scheme
+// (X jump, L3 sprint, Circle crouch, Square melee, Triangle interact/enter, R1 cover, L1 weapons, R3 look back).
+const int LAYOUT_VERSION = 2;
+
 QJsonObject DefaultFoot()
 {
 	return QJsonObject{
 		{"W", "LUp"}, {"S", "LDown"}, {"A", "LLeft"}, {"D", "LRight"},
 		{"MouseLeft", "R2"}, {"MouseRight", "L2"},
-		{"Shift", "Cross"}, {"Space", "Square"}, {"F", "Triangle"}, {"R", "Circle"},
+		{"Shift", "L3"}, {"Space", "Cross"},
+		{"Control", "Circle"}, {"C", "Circle"},
+		{"F", "Triangle"}, {"E", "Triangle"},
+		{"V", "Square"},
 		{"Q", "R1"}, {"Tab", "L1"}, {"Mouse4", "L1"}, {"Mouse5", "R1"},
-		{"Control", "L3"}, {"C", "R3"}, {"MouseMiddle", "R3"},
-		{"E", "DpadRight"}, {"Up", "DpadUp"}, {"Down", "DpadDown"}, {"Left", "DpadLeft"}, {"Right", "DpadRight"},
+		{"X", "R3"}, {"MouseMiddle", "R3"},
 		{"1", "DpadUp"}, {"2", "DpadDown"}, {"3", "DpadLeft"}, {"4", "DpadRight"},
+		{"Up", "DpadUp"}, {"Down", "DpadDown"}, {"Left", "DpadLeft"}, {"Right", "DpadRight"},
 		{"M", "Touchpad"}, {"Esc", "Options"}, {"F12", "Share"}, {"P", "PS"},
 		{"Option", "Walk"},
 		{"I", "RUp"}, {"K", "RDown"}, {"J", "RLeft"}, {"L", "RRight"},
@@ -81,7 +88,7 @@ QJsonObject DefaultFoot()
 
 QJsonObject DefaultVehicle()
 {
-	return QJsonObject{ {"W", "R2"}, {"S", "L2"}, {"Space", "R1"}, {"H", "L3"} };
+	return QJsonObject{ {"W", "R2"}, {"S", "L2"}, {"Space", "Cross"}, {"H", "L3"}, {"MouseLeft", "R1"} };
 }
 
 uint32_t ButtonFor(const QString &o)
@@ -160,7 +167,7 @@ public:
 			          "'vehicle' only lists keys that differ from 'foot'."},
 			{"sensitivity", sensitivity}, {"vertical_ratio", y_ratio}, {"response_curve", curve},
 			{"anti_deadzone", anti_deadzone}, {"smoothing_ms", smoothing_ms}, {"invert_y", invert_y},
-			{"walk_scale", walk_scale}, {"sounds", sounds},
+			{"walk_scale", walk_scale}, {"sounds", sounds}, {"layout_version", LAYOUT_VERSION},
 			{"foot", footJ}, {"vehicle", vehJ},
 		};
 	}
@@ -181,11 +188,12 @@ public:
 		invert_y = o.value("invert_y").toBool(invert_y);
 		walk_scale = o.value("walk_scale").toDouble(walk_scale);
 		sounds = o.value("sounds").toBool(sounds);
-		foot_json = o.value("foot").isObject() ? o.value("foot").toObject() : DefaultFoot();
-		vehicle_json = o.value("vehicle").isObject() ? o.value("vehicle").toObject() : DefaultVehicle();
+		bool old_layout = o.value("layout_version").toInt(1) < LAYOUT_VERSION;
+		foot_json = (!old_layout && o.value("foot").isObject()) ? o.value("foot").toObject() : DefaultFoot();
+		vehicle_json = (!old_layout && o.value("vehicle").isObject()) ? o.value("vehicle").toObject() : DefaultVehicle();
 		foot = ParseMap(foot_json);
 		vehicle = ParseMap(vehicle_json);
-		if(!f.exists())
+		if(!f.exists() || old_layout)
 			SaveConfig();
 	}
 
