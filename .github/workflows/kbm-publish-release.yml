@@ -1,0 +1,32 @@
+name: Publish KBM mac build as release
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Build run id"
+        required: true
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: chiaki-ng-macos_arm64-Release
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: out
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mv out/chiaki-ng.dmg out/chiaki-ng-KBM-mac.dmg
+          gh release create "kbm-mac-${{ inputs.run_id }}" out/chiaki-ng-KBM-mac.dmg \
+            --repo "$GITHUB_REPOSITORY" --target kbm-mouse-aim \
+            --title "chiaki-ng 키보드·마우스판 (맥, Apple Silicon)" \
+            --notes "PS5를 맥에서 키보드·마우스로. \` 키로 켜기/끄기, Caps Lock 차량 모드."
