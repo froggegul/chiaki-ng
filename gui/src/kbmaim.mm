@@ -269,6 +269,8 @@ public:
 				else changedCfg = false;
 				if(changedCfg) { Sound(@"Morse"); SaveConfig(); return nil; }
 			}
+			if(!IsBound(code))
+				return e; // unmapped keys keep working normally (e.g. Ctrl+O menu)
 			if(down) held.insert(code); else held.remove(code);
 			Notify();
 			return nil;
