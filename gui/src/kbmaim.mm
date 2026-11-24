@@ -63,9 +63,9 @@ const int KEY_CAPS = 57;
 const int KEY_SENS_DOWN = 27, KEY_SENS_UP = 24;      // - =
 const int KEY_ADZ_DOWN = 33, KEY_ADZ_UP = 30;        // [ ]
 
-// Layout version 2: PC-style keys for the GTA 6 *Default* control scheme
+// Layout version 3 (v2 + R = Square/reload): PC-style keys for the GTA 6 *Default* control scheme
 // (X jump, L3 sprint, Circle crouch, Square melee, Triangle interact/enter, R1 cover, L1 weapons, R3 look back).
-const int LAYOUT_VERSION = 2;
+const int LAYOUT_VERSION = 3;
 
 QJsonObject DefaultFoot()
 {
@@ -75,7 +75,7 @@ QJsonObject DefaultFoot()
 		{"Shift", "L3"}, {"Space", "Cross"},
 		{"Control", "Circle"}, {"C", "Circle"},
 		{"F", "Triangle"}, {"E", "Triangle"},
-		{"V", "Square"},
+		{"V", "Square"}, {"R", "Square"}, // reload (with a gun) / melee
 		{"Q", "R1"}, {"Tab", "L1"}, {"Mouse4", "L1"}, {"Mouse5", "R1"},
 		{"X", "R3"}, {"MouseMiddle", "R3"},
 		{"1", "DpadUp"}, {"2", "DpadDown"}, {"3", "DpadLeft"}, {"4", "DpadRight"},
